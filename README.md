@@ -11,8 +11,11 @@ NRSVault Mini is a free Windows app. You point it at a folder of NES ROMs and it
 - adds the correct **NES 2.0 header** to every ROM
 - names each file and puts it in the folder the database says it belongs in
 - searches your other folders, even huge messy ones, for ROMs you are missing, and copies them in
+- uses magic to peer deep inside headered and non-headered files to determine matches
+- unknown rom folders can be raw headered or headerless files or packed in zip/7z/rar archives
+- complete "point and shoot", no need to get your hands dirty to prep files for analysis
 
-You don't need RomVault or any other ROM manager. NRSVault Mini can build and maintain the
+You don't need RomVault or any other ROM manager either. NRSVault Mini can build and maintain the
 whole collection by itself.
 
 <img width="1671" height="941" alt="Eggmans_NRSVault_banner" src="https://github.com/user-attachments/assets/408d00fe-b406-4638-9c18-a1be45fd79b5" />
