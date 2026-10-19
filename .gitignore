@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+publish/
+release/
+
+# IDE
+.vs/
+.vscode/
+.idea/
+*.user
+*.suo
+
+# Original helper scripts (their logic is built into the app)
+files/*.py
+__pycache__/
