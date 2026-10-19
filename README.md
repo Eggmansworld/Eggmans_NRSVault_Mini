@@ -366,4 +366,8 @@ isn't covered by this project's license.
 
 ## License
 
-The NRSVault Mini source code is released under the [MIT License](LICENSE).
+Original source code, scripts, tooling, and hand-authored documentation and metadata in this repository are licensed under the MIT License.
+
+Archived game data, binaries, firmware, media assets, and other third-party materials are not covered by the MIT License and remain the property of their respective copyright holders.
+
+See the LICENSE and NOTICE files for full details and scope clarification.
