@@ -15,6 +15,8 @@ NRSVault Mini is a free Windows app. You point it at a folder of NES ROMs and it
 You don't need RomVault or any other ROM manager. NRSVault Mini can build and maintain the
 whole collection by itself.
 
+<img width="1671" height="941" alt="Eggmans_NRSVault_banner" src="https://github.com/user-attachments/assets/408d00fe-b406-4638-9c18-a1be45fd79b5" />
+
 ---
 
 ## Contents
@@ -111,6 +113,8 @@ update headers in place. Any archives it finds there are unpacked automatically.
 
 The left sidebar now shows the database date and how many games and ROM files it describes.
 
+
+
 ### Step 3: Scan your collection
 
 Press **Scan**. The app reads every file in the collection folder and identifies each one
@@ -132,6 +136,8 @@ because only new or changed files are read again.
   the header it has now, and its hashes.
 - Use the search box (name, path, CRC32 or SHA1) and the filter list to narrow things down.
 
+<img width="1403" height="972" alt="image" src="https://github.com/user-attachments/assets/09c47002-f8ad-4378-9760-03b10895871d" />
+
 ### Step 5: Find missing ROMs in your other folders
 
 If you have other folders full of NES ROMs (downloads, old sets, "unsorted" dumps), let the
@@ -151,6 +157,8 @@ whether the header is wrong.
   collection.
 - Hundreds of thousands of files are fine. Only files of a size that could match are read,
   and the results are remembered. If you cancel, the next scan continues where it left off.
+
+<img width="827" height="358" alt="image" src="https://github.com/user-attachments/assets/63b2fd77-e362-4969-80e8-fdd22a060ece" />
 
 ### Step 6: Do a trial run
 
