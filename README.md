@@ -33,6 +33,8 @@ whole collection by itself.
 - [Advanced: making a DAT for RomVault](#advanced-making-a-dat-for-romvault)
 - [Building from source](#building-from-source)
 - [Credits](#credits)
+- [Contributors](#contributors)
+- [License](#license)
 
 ---
 
@@ -371,6 +373,14 @@ isn't covered by this project's license.
   every database entry.
 - Built with [Avalonia UI](https://avaloniaui.net/) and
   [SharpCompress](https://github.com/adamhathcock/sharpcompress).
+
+## Contributors
+
+- **Eggman** ([Eggmansworld](https://github.com/Eggmansworld)): creator, design and
+  direction, testing, documentation
+- **Claude** ([Anthropic](https://www.anthropic.com/claude)): an AI assistant. Wrote the
+  application code, the header port and its verification, the test tools and the original
+  README, working with Eggman in Claude Code
 
 ## License
 
