@@ -1,6 +1,6 @@
 # NRSVault Mini
 
-**Build and look after a complete, correctly headered NES ROM collection based on
+**Build and maintain a complete, correctly headered NES ROM collection based on
 NewRisingSun's NES 2.0 database (`nes20db.xml`).**
 
 <!-- Screenshot: main window -->
