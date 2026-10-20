@@ -53,7 +53,8 @@ public static class Scanner
     }
 
     /// <param name="excludeDirs">Folders inside root to skip (backup folder, source folders).</param>
-    public static List<FileInfoRecord> Scan(string root, IEnumerable<string>? excludeDirs, IProgress<ScanProgress>? progress, CancellationToken ct)
+    public static List<FileInfoRecord> Scan(string root, IEnumerable<string>? excludeDirs, IProgress<ScanProgress>? progress, CancellationToken ct,
+                                            ChipIndex? chips = null)
     {
         root = Path.GetFullPath(root).TrimEnd('\\');
         var excludes = (excludeDirs ?? Array.Empty<string>()).Where(d => !string.IsNullOrWhiteSpace(d))
@@ -83,14 +84,15 @@ public static class Scanner
             {
                 var fi = new FileInfo(full);
                 if (cache.TryGetValue(rel, out var cached) && cached.Size == fi.Length &&
-                    cached.MTimeTicks == fi.LastWriteTimeUtc.Ticks)
+                    cached.MTimeTicks == fi.LastWriteTimeUtc.Ticks &&
+                    (chips == null || cached.Kind == FileKind.Archive || cached.ChipStamp == chips.Stamp))
                 {
                     cached.RelPath = rel; // keep on-disk case
                     rec = cached;
                 }
                 else
                 {
-                    rec = RomFile.Analyze(full, rel);
+                    rec = RomFile.Analyze(full, rel, chips);
                 }
             }
             catch (Exception ex)

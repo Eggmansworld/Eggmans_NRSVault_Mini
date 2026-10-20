@@ -64,6 +64,7 @@ public sealed class MainViewModel : ViewModelBase
 
     private readonly AppSettings _settings = AppSettings.Load();
     private NesDb? _db;
+    private ChipIndex? _chipIndex;
     private CollectionState? _state;
     private TreeNode _root = new();
     private CancellationTokenSource? _cts;
@@ -293,6 +294,7 @@ public sealed class MainViewModel : ViewModelBase
         var path = XmlPath;
         var db = await Task.Run(() => NesDb.Load(path));
         _db = db;
+        _chipIndex = null;
         _state = new CollectionState(db);
         _lastSourceScan = null;
         SourceMatchList.ReplaceAll(Array.Empty<SourceMatchVm>());
@@ -319,6 +321,7 @@ public sealed class MainViewModel : ViewModelBase
         if (!File.Exists(XmlPath)) throw new FileNotFoundException("nes20db.xml not found: " + XmlPath);
         var path = XmlPath;
         _db = await Task.Run(() => NesDb.Load(path));
+        _chipIndex = null;
         _state = new CollectionState(_db);
         if (_lastSourceScan != null) _state.ApplySources(_lastSourceScan, _lastSourceFolderCount);
         AddLog($"Loaded nes20db.xml dated {_db.Date}: {_db.Entries.Count:N0} entries, {_db.Rows.Count:N0} file paths.");
@@ -338,7 +341,8 @@ public sealed class MainViewModel : ViewModelBase
         AddLog($"Scanning {root} ...");
         var sw = System.Diagnostics.Stopwatch.StartNew();
         var progress = MakeProgress("Scanning");
-        var files = await Task.Run(() => Scanner.Scan(root, exclude, progress, ct), ct);
+        var chips = _chipIndex ??= new ChipIndex(_db!);
+        var files = await Task.Run(() => Scanner.Scan(root, exclude, progress, ct, chips), ct);
         _state!.Apply(files);
         var s = _state.Stats;
         AddLog($"Scanned {files.Count:N0} files in {sw.Elapsed.TotalSeconds:F1}s: {s.Count(RowStatus.Ok):N0} OK, " +
@@ -515,11 +519,13 @@ public sealed class MainViewModel : ViewModelBase
         bool useSources = UseSources;
         AddLog((trial ? "===== TRIAL RUN: split export, no files will be written =====" : "Exporting split files to " + folder) + " ...");
         var r = await Task.Run(() => SplitExporter.Export(state, root, folder, useSources, trial, AddLog, MakeProgress("Splitting"), ct), ct);
-        AddLog($"{(trial ? "TRIAL RUN summary" : "Split export done")}: {r.Written:N0} file(s) {(trial ? "would be written" : "written")}, " +
-               $"{r.AlreadyThere:N0} already up to date, {r.NoSource:N0} path(s) skipped (ROM not available), {r.Failed:N0} failed.");
+        AddLog($"{(trial ? "TRIAL RUN summary" : "Split export done")}: {r.Written:N0} chip file(s) {(trial ? "would be written" : "written")} " +
+               $"({r.FromElsewhere:N0} taken from other ROMs or loose chip files), {r.AlreadyThere:N0} already up to date, " +
+               $"{r.Missing:N0} chip(s) not found anywhere, {r.Failed:N0} failed.");
+        AddLog($"  Paths: {r.PathsComplete:N0} complete, {r.PathsPartial:N0} partial (some chips still missing), {r.PathsEmpty:N0} with no chips yet.");
         StatusText = trial
-            ? $"Trial run: {r.Written:N0} split files would be written. Turn off TRIAL RUN to export."
-            : $"Split export: {r.Written:N0} written, {r.AlreadyThere:N0} already up to date.";
+            ? $"Trial run: {r.Written:N0} split files would be written, {r.Missing:N0} chips not found. Turn off TRIAL RUN to export."
+            : $"Split export: {r.Written:N0} written, {r.AlreadyThere:N0} already up to date, {r.Missing:N0} chips not found.";
     });
 
     public string DefaultDatFileName =>$"{DatName} ({_db?.Date ?? DateTime.Now.ToString("yyyy-MM-dd")}).dat";

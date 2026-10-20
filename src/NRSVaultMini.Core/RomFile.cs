@@ -22,6 +22,9 @@ public sealed class FileInfoRecord
     public long ReportedSize { get; set; }
     public string? ReportedSha1 { get; set; }
     public string? Error { get; set; }
+    /// <summary>nes20db PRG/CHR chips found inside this file's ROM data (see <see cref="ChipIndex"/>).</summary>
+    public List<ChipHit>? Chips { get; set; }
+    public string? ChipStamp { get; set; }
 
     [JsonIgnore] public byte[]? HeaderBytes => HeaderHex == null ? null : Convert.FromHexString(HeaderHex);
 }
@@ -33,7 +36,7 @@ public static class RomFile
     public static bool IsArchive(string path) =>
         ArchiveExtensions.Contains(Path.GetExtension(path), StringComparer.OrdinalIgnoreCase);
 
-    public static FileInfoRecord Analyze(string fullPath, string relPath)
+    public static FileInfoRecord Analyze(string fullPath, string relPath, ChipIndex? chips = null)
     {
         var fi = new FileInfo(fullPath);
         var rec = new FileInfoRecord { RelPath = relPath, Size = fi.Length, MTimeTicks = fi.LastWriteTimeUtc.Ticks };
@@ -54,6 +57,12 @@ public static class RomFile
             rec.HeaderHex = header == null ? null : Convert.ToHexString(header);
             rec.PayloadSize = payload.Length;
             rec.PayloadSha1 = kind == FileKind.Raw ? rec.FileSha1 : Convert.ToHexString(SHA1.HashData(payload));
+            if (chips != null)
+            {
+                var hits = chips.Find(header, payload);
+                rec.Chips = hits.Count > 0 ? hits : null;
+                rec.ChipStamp = chips.Stamp;
+            }
 
             if (header != null)
             {

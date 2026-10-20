@@ -351,21 +351,40 @@ doesn't depend on what you have or on a scan.
 
 **Export split files…** cuts your ROMs into `.prg` / `.chr` files in a folder you choose:
 
-1. Scan your collection first (and **Scan sources**, if you want ROMs from source folders
-   used too).
-2. Press **Export split files…** and pick an **empty folder outside your collection
-   folder**. The app refuses a folder inside the collection.
+1. Scan your collection first, and press **Scan sources** too if you want your source
+   folders searched for chips.
+2. Press **Export split files…** and pick a folder **outside your collection folder**. The
+   app refuses a folder inside the collection.
 3. With **TRIAL RUN** ticked it only reports how many files it would write. Untick it to
    write them.
+
+The export works **chip by chip**, so a game you don't have as a complete ROM can still get
+its `.prg` and `.chr`. Each PRG and CHR is identified by its nes20db SHA1 and taken from any
+copy of those exact bytes:
+
+- **The game's own ROM**, in your collection or a source folder. It doesn't matter if the
+  header is bad or the file is in the wrong place, so your collection doesn't have to be
+  fixed first.
+- **Another game's ROM that uses the same chip.** Revisions, regional versions and hacks
+  often share PRG or CHR.
+- **ROMs that aren't in nes20db**, such as hacks, bad dumps and overdumps. Headered files
+  are cut where their own header says. Headerless ones are tried at every known PRG/CHR
+  size boundary.
+- **Loose chip files** such as `.prg`, `.chr` or `.bin`, loose or inside `.zip` / `.7z` /
+  `.rar` archives.
+- **Chips already in the split folder**, copied to any other path that uses the same chip.
 
 Details:
 
 - The split folder uses the same sub-folders and names as the collection.
-- Each piece is checked against the nes20db SHA1 before it's written.
+- Each chip is checked against its nes20db SHA1 before it's written.
 - Files already there with the right contents are skipped, so running it again only adds
-  what's new.
-- A ROM is cut from whatever copy is available, even one with a bad header or in the wrong
-  place, or one in a source folder. Your collection doesn't have to be fixed first.
+  what's new. The split folder's hashes are cached, so re-runs are quick.
+- The log reports the counts per chip: how many were written, how many came from other
+  ROMs or loose chip files, how many weren't found anywhere, and how many paths are
+  complete or partial.
+- The first scan after updating the app reads each file once more to record the chips it
+  contains.
 - Only PRG and CHR are exported. Trainers, extra "misc" ROM chips and footers aren't part
   of the split set.
 - The split folder is a separate output. It doesn't replace the headered collection, which

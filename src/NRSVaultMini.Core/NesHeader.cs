@@ -128,6 +128,20 @@ public static class NesHeader
         return size;
     }
 
+    /// <summary>PRG-ROM size an existing header claims.</summary>
+    public static long PrgSize(ReadOnlySpan<byte> h)
+    {
+        if (IsNes20(h) && (h[9] & 0x0F) == 0x0F) return (1L << ((h[4] & 0xFC) >> 2)) * (((h[4] & 0x3) * 2) + 1);
+        return 16384L * ((IsNes20(h) ? (h[9] & 0x0F) << 8 : 0) | h[4]);
+    }
+
+    /// <summary>CHR-ROM size an existing header claims.</summary>
+    public static long ChrSize(ReadOnlySpan<byte> h)
+    {
+        if (IsNes20(h) && (h[9] & 0xF0) == 0xF0) return (1L << ((h[5] & 0xFC) >> 2)) * (((h[5] & 0x3) * 2) + 1);
+        return 8192L * ((IsNes20(h) ? (h[9] & 0xF0) << 4 : 0) | h[5]);
+    }
+
     public static int Mapper(ReadOnlySpan<byte> h)
     {
         int m = (h[7] & 0xF0) | ((h[6] & 0xF0) >> 4);

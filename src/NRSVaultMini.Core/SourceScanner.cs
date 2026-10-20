@@ -16,6 +16,8 @@ public sealed class SourceRecord
     public string? HeaderHex { get; set; }
     public long PayloadSize { get; set; }
     public string PayloadSha1 { get; set; } = "";
+    /// <summary>nes20db PRG/CHR chips found inside this file's ROM data.</summary>
+    public List<ChipHit>? Chips { get; set; }
 
     public string Display => EntryKey == null ? Path : Path + " » " + EntryKey;
     public string KindText => (EntryKey != null ? "in archive, " : "") + Kind switch
@@ -84,10 +86,20 @@ public static class SourceScanner
     private static bool SizeCandidate(long size, HashSet<long> sizes) =>
         sizes.Contains(size) || sizes.Contains(size - NesHeader.Size);
 
+    /// <summary>What a source file has to look like to be worth reading: a whole nes20db ROM, or something holding chips.</summary>
+    private sealed record Wanted(HashSet<long> Sizes, ChipIndex Chips)
+    {
+        public bool ReadFile(long size, string name) =>
+            size <= 512L * 1024 * 1024 &&
+            (SizeCandidate(size, Sizes) || Chips.MightHoldChips(size) || UnifExt.Contains(System.IO.Path.GetExtension(name), StringComparer.OrdinalIgnoreCase));
+    }
+
     public static SourceScanResult Scan(IEnumerable<string> folders, NesDb db, IProgress<ScanProgress>? progress, CancellationToken ct)
     {
         var sizes = DbSizes(db);
-        var stamp = Stamp(sizes);
+        var chips = new ChipIndex(db);
+        var want = new Wanted(sizes, chips);
+        var stamp = Stamp(sizes) + "-" + chips.Stamp;
         var result = new SourceScanResult();
 
         foreach (var folderRaw in folders)
@@ -133,12 +145,12 @@ public static class SourceScanner
                             item = new SourceCacheItem { Size = len, MTimeTicks = mt, Stamp = stamp };
                             if (RomFile.IsArchive(fi.FullName))
                             {
-                                item.Records.AddRange(ReadArchive(fi.FullName, sizes, ct));
+                                item.Records.AddRange(ReadArchive(fi.FullName, want, ct));
                                 Interlocked.Increment(ref result.ArchivesRead);
                             }
-                            else if (SizeCandidate(len, sizes) || UnifExt.Contains(fi.Extension, StringComparer.OrdinalIgnoreCase))
+                            else if (want.ReadFile(len, fi.Name))
                             {
-                                if (Analyze(fi.FullName, null, File.ReadAllBytes(fi.FullName), sizes) is { } r)
+                                if (Analyze(fi.FullName, null, File.ReadAllBytes(fi.FullName), want) is { } r)
                                     item.Records.Add(r);
                                 Interlocked.Increment(ref result.FilesRead);
                             }
@@ -189,10 +201,12 @@ public static class SourceScanner
         try { SaveCache(folder, merged); } catch { /* cache is a convenience */ }
     }
 
-    private static SourceRecord? Analyze(string path, string? entryKey, byte[] data, HashSet<long> sizes)
+    private static SourceRecord? Analyze(string path, string? entryKey, byte[] data, Wanted want)
     {
         var (kind, header, payload) = RomFile.Split(data);
-        if (!sizes.Contains(payload.Length)) return null;
+        bool wholeRom = want.Sizes.Contains(payload.Length);
+        var chips = want.Chips.Find(header, payload);
+        if (!wholeRom && chips.Count == 0) return null;
         return new SourceRecord
         {
             Path = path,
@@ -201,6 +215,7 @@ public static class SourceScanner
             HeaderHex = header == null ? null : Convert.ToHexString(header),
             PayloadSize = payload.Length,
             PayloadSha1 = Convert.ToHexString(SHA1.HashData(payload)),
+            Chips = chips.Count > 0 ? chips : null,
         };
     }
 
@@ -234,13 +249,12 @@ public static class SourceScanner
         }
     }
 
-    private static List<SourceRecord> ReadArchive(string path, HashSet<long> sizes, CancellationToken ct)
+    private static List<SourceRecord> ReadArchive(string path, Wanted want, CancellationToken ct)
     {
         var list = new List<SourceRecord>();
         ForEachEntry(path,
-            (key, size) => size <= 512L * 1024 * 1024 &&
-                           (SizeCandidate(size, sizes) || UnifExt.Contains(System.IO.Path.GetExtension(key), StringComparer.OrdinalIgnoreCase)),
-            (key, data) => { if (Analyze(path, key, data, sizes) is { } r) list.Add(r); },
+            (key, size) => want.ReadFile(size, key),
+            (key, data) => { if (Analyze(path, key, data, want) is { } r) list.Add(r); },
             ct);
         return list;
     }

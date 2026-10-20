@@ -60,7 +60,7 @@ if (args.Length >= 4 && args[0] == "split")
     var db = NesDb.Load(args[1]);
     var state = Scan(db, args[2]);
     var r = SplitExporter.Export(state, args[2], args[3], srcFolders.Count > 0, args.Length > 4 && args[4] == "trial", s => { }, null, default);
-    Console.WriteLine($"split export: written={r.Written} alreadyThere={r.AlreadyThere} noSource={r.NoSource} failed={r.Failed}");
+    Console.WriteLine($"split export: written={r.Written} alreadyThere={r.AlreadyThere} missing={r.Missing} fromElsewhere={r.FromElsewhere} paths: complete={r.PathsComplete} partial={r.PathsPartial} empty={r.PathsEmpty} failed={r.Failed}");
     foreach (var e in r.Errors.Take(10)) Console.WriteLine("  ERR " + e);
     return 0;
 }
@@ -110,7 +110,7 @@ return 1;
 CollectionState Scan(NesDb db, string root)
 {
     var sw = System.Diagnostics.Stopwatch.StartNew();
-    var files = Scanner.Scan(root, srcFolders, null, default);
+    var files = Scanner.Scan(root, srcFolders, null, default, new ChipIndex(db));
     var state = new CollectionState(db);
     state.Apply(files);
     Console.WriteLine($"Scanned {files.Count} files in {sw.Elapsed.TotalSeconds:F1}s");
