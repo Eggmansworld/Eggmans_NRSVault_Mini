@@ -21,6 +21,7 @@ public sealed class AppSettings
     public string DatName { get; set; } = new DatOptions().Name;
     public string DatAuthor { get; set; } = new DatOptions().Author;
     public string LastDatFolder { get; set; } = "";
+    public string SplitFolder { get; set; } = "";
     public double WindowWidth { get; set; } = 1500;
     public double WindowHeight { get; set; } = 900;
 

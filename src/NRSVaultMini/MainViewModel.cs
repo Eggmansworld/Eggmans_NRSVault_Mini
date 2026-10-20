@@ -484,7 +484,45 @@ public sealed class MainViewModel : ViewModelBase
         StatusText = $"DAT written with {r.Verified + r.Unverified:N0} ROMs.";
     });
 
-    public string DefaultDatFileName => $"{DatName} ({_db?.Date ?? DateTime.Now.ToString("yyyy-MM-dd")}).dat";
+    public Task GenerateSplitDatAsync(string path) => RunBusy("Generating split DAT", async _ =>
+    {
+        await EnsureDbAsync();
+        var db = _db!;
+        var opt = new DatOptions { Name = DatWriter.SplitName(DatName), Author = DatAuthor };
+        int n = await Task.Run(() => DatWriter.WriteSplit(path, db, opt, AppVersion));
+        _settings.LastDatFolder = Path.GetDirectoryName(path) ?? "";
+        AddLog($"Split DAT written: {path}");
+        AddLog($"  {n:N0} games with .prg/.chr files (hashes taken from nes20db.xml, so every entry is included).");
+        StatusText = $"Split DAT written with {n:N0} games.";
+    });
+
+    public string DefaultSplitDatFileName => $"{DatWriter.SplitName(DatName)} ({_db?.Date ?? DateTime.Now.ToString("yyyy-MM-dd")}).dat";
+
+    /// <summary>Cuts every available ROM into &lt;name&gt;.prg / &lt;name&gt;.chr under <paramref name="folder"/>.</summary>
+    public Task ExportSplitAsync(string folder, Func<string, Task<bool>> confirm) => RunBusy("Exporting split files", async ct =>
+    {
+        await EnsureDbAsync();
+        if (!_state!.Scanned) await ScanCoreAsync(ct);
+        _settings.SplitFolder = folder;
+        bool trial = TrialRun;
+        if (!trial && !await confirm($"Write split .prg / .chr files to:\n{folder}\n\nFiles already there with the right contents are skipped.\n\nContinue?"))
+        {
+            AddLog("Split export cancelled by user.");
+            return;
+        }
+        var state = _state;
+        var root = RootFolder;
+        bool useSources = UseSources;
+        AddLog((trial ? "===== TRIAL RUN: split export, no files will be written =====" : "Exporting split files to " + folder) + " ...");
+        var r = await Task.Run(() => SplitExporter.Export(state, root, folder, useSources, trial, AddLog, MakeProgress("Splitting"), ct), ct);
+        AddLog($"{(trial ? "TRIAL RUN summary" : "Split export done")}: {r.Written:N0} file(s) {(trial ? "would be written" : "written")}, " +
+               $"{r.AlreadyThere:N0} already up to date, {r.NoSource:N0} path(s) skipped (ROM not available), {r.Failed:N0} failed.");
+        StatusText = trial
+            ? $"Trial run: {r.Written:N0} split files would be written. Turn off TRIAL RUN to export."
+            : $"Split export: {r.Written:N0} written, {r.AlreadyThere:N0} already up to date.";
+    });
+
+    public string DefaultDatFileName =>$"{DatName} ({_db?.Date ?? DateTime.Now.ToString("yyyy-MM-dd")}).dat";
 
     public Task ExportReportAsync(string path) => RunBusy("Exporting report", async _ =>
     {

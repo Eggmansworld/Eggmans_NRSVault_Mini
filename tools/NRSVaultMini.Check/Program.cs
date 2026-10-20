@@ -23,6 +23,48 @@ if (args.Length >= 3 && args[0] == "headers")
     return 0;
 }
 
+// splitcheck <xml> <root>          : slice every matching file and compare PRG/CHR with nes20db hashes (read-only)
+// splitdat   <xml> <out.dat>
+// split      <xml> <root> <outdir> [trial]
+if (args.Length >= 3 && args[0] == "splitcheck")
+{
+    var db = NesDb.Load(args[1]);
+    var state = Scan(db, args[2]);
+    int files = 0, pieces = 0, bad = 0;
+    foreach (var f in state.Files)
+    {
+        if (state.MatchFull(f) is not { } e) continue;
+        files++;
+        var payload = RomFile.ReadPayload(Path.Combine(args[2], f.RelPath));
+        foreach (var p in SplitLayout.Pieces(e))
+        {
+            pieces++;
+            var sha = Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(payload.AsSpan((int)p.Offset, (int)p.Size)));
+            var crc = Crc32Util.ToHex(Crc32Util.Compute(payload.AsSpan((int)p.Offset, (int)p.Size)));
+            if (sha != p.Sha1 || crc != p.Crc) { bad++; if (bad <= 10) Console.WriteLine($"  MISMATCH {p.Kind} {f.RelPath}"); }
+        }
+    }
+    var withTrainer = state.Files.Count(f => state.MatchFull(f) is { } e && e.Spec.Trainer > 0);
+    Console.WriteLine($"splitcheck: {files} files, {pieces} PRG/CHR pieces, {bad} mismatches ({withTrainer} files have trainers)");
+    return bad == 0 ? 0 : 2;
+}
+if (args.Length >= 3 && args[0] == "splitdat")
+{
+    var db = NesDb.Load(args[1]);
+    var n = DatWriter.WriteSplit(args[2], db, new DatOptions { Name = DatWriter.SplitName(new DatOptions().Name) }, "check");
+    Console.WriteLine($"split DAT: {n} games");
+    return 0;
+}
+if (args.Length >= 4 && args[0] == "split")
+{
+    var db = NesDb.Load(args[1]);
+    var state = Scan(db, args[2]);
+    var r = SplitExporter.Export(state, args[2], args[3], srcFolders.Count > 0, args.Length > 4 && args[4] == "trial", s => { }, null, default);
+    Console.WriteLine($"split export: written={r.Written} alreadyThere={r.AlreadyThere} noSource={r.NoSource} failed={r.Failed}");
+    foreach (var e in r.Errors.Take(10)) Console.WriteLine("  ERR " + e);
+    return 0;
+}
+
 if (args.Length >= 3 && args[0] is "scan" or "fix" or "dat")
 {
     var db = NesDb.Load(args[1]);

@@ -34,6 +34,7 @@ whole collection by itself.
 - [When a new nes20db.xml comes out](#when-a-new-nes20dbxml-comes-out)
 - [Questions and troubleshooting](#questions-and-troubleshooting)
 - [Advanced: making a DAT for RomVault](#advanced-making-a-dat-for-romvault)
+- [Advanced: split PRG/CHR files](#advanced-split-prgchr-files)
 - [Building from source](#building-from-source)
 - [Credits](#credits)
 - [Contributors](#contributors)
@@ -333,6 +334,42 @@ from zips without any problem.
   only, marked unverified).
 - All of the original nes20db information for each game is kept inside the DAT, so the
   DAT alone records how every header was made.
+
+---
+
+## Advanced: split PRG/CHR files
+
+Some people prefer to keep a cartridge's chips as separate files: `Game.prg` (program ROM)
+and `Game.chr` (graphics ROM, only for cartridges that have one). These files have no
+header. They're useful for comparing dumps, finding duplicates and other research, because
+header differences can't get in the way.
+
+**Split DAT…** writes a DAT of the whole split set: for every database path, a game holding
+`<name>.prg` and `<name>.chr` with their size, CRC32 and SHA1. nes20db.xml already lists
+the hashes of every PRG and CHR, so the split DAT always covers **all** 22,743 paths. It
+doesn't depend on what you have or on a scan.
+
+**Export split files…** cuts your ROMs into `.prg` / `.chr` files in a folder you choose:
+
+1. Scan your collection first (and **Scan sources**, if you want ROMs from source folders
+   used too).
+2. Press **Export split files…** and pick an **empty folder outside your collection
+   folder**. The app refuses a folder inside the collection.
+3. With **TRIAL RUN** ticked it only reports how many files it would write. Untick it to
+   write them.
+
+Details:
+
+- The split folder uses the same sub-folders and names as the collection.
+- Each piece is checked against the nes20db SHA1 before it's written.
+- Files already there with the right contents are skipped, so running it again only adds
+  what's new.
+- A ROM is cut from whatever copy is available, even one with a bad header or in the wrong
+  place, or one in a source folder. Your collection doesn't have to be fixed first.
+- Only PRG and CHR are exported. Trainers, extra "misc" ROM chips and footers aren't part
+  of the split set.
+- The split folder is a separate output. It doesn't replace the headered collection, which
+  is what emulators need.
 
 ---
 

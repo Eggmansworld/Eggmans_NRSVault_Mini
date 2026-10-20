@@ -97,6 +97,18 @@ public partial class MainWindow : Window
         if (path != null) await _vm.GenerateDatAsync(path);
     }
 
+    private async void SplitDat_Click(object? sender, RoutedEventArgs e)
+    {
+        var path = await SaveFile("Save split PRG/CHR DAT", _vm.DefaultSplitDatFileName, _vm.Settings.LastDatFolder, "DAT file", "*.dat");
+        if (path != null) await _vm.GenerateSplitDatAsync(path);
+    }
+
+    private async void SplitExport_Click(object? sender, RoutedEventArgs e)
+    {
+        var folder = await PickFolder("Choose a folder for the split .prg / .chr files (outside the collection folder)", _vm.Settings.SplitFolder);
+        if (folder != null) await _vm.ExportSplitAsync(folder, Confirm);
+    }
+
     private async void Report_Click(object? sender, RoutedEventArgs e)
     {
         var path = await SaveFile("Export collection report", $"NRSVault report {DateTime.Now:yyyy-MM-dd HHmm}.csv", _vm.Settings.LastDatFolder, "CSV", "*.csv");

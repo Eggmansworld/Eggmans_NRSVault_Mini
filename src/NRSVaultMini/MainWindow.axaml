@@ -31,6 +31,10 @@
           <Button Content="{Binding FixButtonText}" Click="Fix_Click" IsEnabled="{Binding IsIdle}" Margin="0,0,4,0" FontWeight="SemiBold"
                   ToolTip.Tip="Extract archives, write correct NES 2.0 headers, rebuild to the XML folder layout, move unknown files" />
           <Button Content="Generate DAT…" Click="Dat_Click" IsEnabled="{Binding IsIdle}" Margin="0,0,4,0" />
+          <Button Content="Split DAT…" Click="SplitDat_Click" IsEnabled="{Binding IsIdle}" Margin="0,0,4,0"
+                  ToolTip.Tip="Write a DAT of the split set: .prg and .chr per ROM, hashes straight from nes20db.xml" />
+          <Button Content="Export split files…" Click="SplitExport_Click" IsEnabled="{Binding IsIdle}" Margin="0,0,4,0"
+                  ToolTip.Tip="Cut every available ROM into .prg / .chr files in a separate folder (respects TRIAL RUN)" />
           <Button Content="Export report…" Click="Report_Click" IsEnabled="{Binding IsIdle}" Margin="0,0,4,0" />
           <Button Content="Cancel" Click="Cancel_Click" IsEnabled="{Binding IsBusy}" Margin="0,0,16,0" />
 
